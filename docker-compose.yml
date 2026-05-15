@@ -1,35 +1,36 @@
 services:
-  glicobot-db:
-    image: postgres:latest
-    container_name: glicobot-db
+  neo4j-db:
+    image: neo4j:latest
+    container_name: neo4j-db
     restart: unless-stopped
-    environment:
-      NEO4J_DB: ${DATABASE_NAME}
-      NEO4J_DB_USER: ${DATABASE_USERNAME}
-      NEO4J_DB_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - "4000:5432"
+      - "7474:7474" # HTTP Browser
+      - "7687:7687" # Bolt Protocol
+    environment:
+      # We only pass the official variable Neo4j expects.
+      # Docker Compose automatically pulls these values from your .env file.
+      NEO4J_AUTH: "${NEO4J_USERNAME}/${NEO4J_PASSWORD}"
     volumes:
-      - glicobot-db-data:/var/lib/postgresql/
-    env_file:
-      - .env
+      - neo4j-db-data:/data
+    # Note: No env_file here to prevent passing unrecognized NEO4J_ variables.
 
-  glicobot-api:
+  nosql-api:
     build: .
-    container_name: glicobot-api
+    container_name: nosql-api
     restart: unless-stopped
     ports:
       - "8000:8000"
     depends_on:
-      - glicobot-db
+      - neo4j-db
     environment:
-      DATABASE_HOST: glicobot-db
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${DATABASE_NAME}
-      DATABASE_USERNAME: ${DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      # We map the values to the names your API expects.
+      NEO4J_URI: ${APP_NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      APP_HOST: ${APP_HOST}
+      APP_PORT: ${APP_PORT}
     env_file:
       - .env
 
 volumes:
-  glicobot-db-data:
+  neo4j-db-data:
