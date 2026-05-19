@@ -4,15 +4,12 @@ services:
     container_name: neo4j-db
     restart: unless-stopped
     ports:
-      - "7474:7474" # HTTP Browser
-      - "7687:7687" # Bolt Protocol
+      - "7474:7474"
+      - "7687:7687"
     environment:
-      # We only pass the official variable Neo4j expects.
-      # Docker Compose automatically pulls these values from your .env file.
       NEO4J_AUTH: "${NEO4J_USERNAME}/${NEO4J_PASSWORD}"
     volumes:
       - neo4j-db-data:/data
-    # Note: No env_file here to prevent passing unrecognized NEO4J_ variables.
 
   nosql-api:
     build: .
@@ -23,12 +20,9 @@ services:
     depends_on:
       - neo4j-db
     environment:
-      # We map the values to the names your API expects.
-      NEO4J_URI: ${APP_NEO4J_URI}
+      APP_NEO4J_URI: bolt://neo4j-db:7687
       NEO4J_USERNAME: ${NEO4J_USERNAME}
       NEO4J_PASSWORD: ${NEO4J_PASSWORD}
-      APP_HOST: ${APP_HOST}
-      APP_PORT: ${APP_PORT}
     env_file:
       - .env
 
